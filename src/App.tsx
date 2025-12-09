@@ -13,7 +13,7 @@ import {
   calculateStandings,
 } from "./utils/tournamentUtils";
 import type { Team, GroupMatch, TeamStats, Match } from "./utils/tournamentUtils";
-import { Wand2, PlayCircle, Trophy, Medal, Loader2, Save, RotateCcw } from "lucide-react";
+import { Wand2, PlayCircle, Trophy, Medal, Loader2, RotateCcw } from "lucide-react";
 import {
   fetchTeams,
   createTeam,
