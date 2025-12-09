@@ -1,4 +1,3 @@
-import React from 'react';
 import { Trophy, Zap, Globe } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 

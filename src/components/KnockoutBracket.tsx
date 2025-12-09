@@ -1,5 +1,4 @@
-import React from 'react';
-import { Medal, Swords, Trophy } from 'lucide-react';
+import { Trophy } from 'lucide-react';
 import type { GroupMatch } from '../utils/tournamentUtils';
 import { useLanguage } from '../contexts/LanguageContext';
 

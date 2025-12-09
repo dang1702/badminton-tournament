@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Header } from "./components/Header";
 import { TeamManager } from "./components/TeamManager";
 import { GroupDisplay } from "./components/GroupDisplay";
@@ -7,7 +7,6 @@ import { StandingsTable } from "./components/StandingsTable";
 import { KnockoutBracket } from "./components/KnockoutBracket";
 import { LanguageProvider, useLanguage } from "./contexts/LanguageContext";
 import {
-  shuffleArray,
   divideGroups,
   generateRoundRobinMatches,
   generateKnockoutMatches,
