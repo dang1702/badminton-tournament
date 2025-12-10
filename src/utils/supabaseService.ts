@@ -1,5 +1,5 @@
 import { supabase } from './supabaseClient';
-import type { Match, MatchScore, Team } from './tournamentUtils';
+import type { GroupMatch, MatchScore, Team } from './tournamentUtils';
 
 // --- Teams ---
 export const fetchTeams = async () => {
@@ -79,31 +79,36 @@ export const fetchMatches = async () => {
     teamA: m.teamA,
     teamB: m.teamB,
     score: m.score,
-    winnerId: m.winner_id,
     phase: m.phase
   }));
 };
 
-export const createMatches = async (matches: any[]) => {
-  // matches input format is App format (GroupMatch[]). Need to flatten to DB rows
-  const rows: any[] = [];
-  
-  matches.forEach(group => {
-    group.matchList.forEach((m: Match) => {
-      rows.push({
-        id: m.id,
-        group_name: group.group,
-        team_a_id: m.teamA.id,
-        team_b_id: m.teamB.id,
-        score: m.score,
-        winner_id: m.winnerId || null,
-        phase: group.phase || 2 // Default to group phase if not specified
-      });
-    });
-  });
+export const createMatches = async (matches: GroupMatch[]): Promise<void> => {
+  try {
+    await clearAllMatches();
+    
+    const matchesToInsert = matches.flatMap(group => 
+      group.matchList.map(match => ({
+        id: match.id,
+        group: group.group,
+        team_a_id: match.teamA.id,
+        team_a_name: match.teamA.name,
+        team_b_id: match.teamB.id,
+        team_b_name: match.teamB.name,
+        score: match.score || { set1: { a: 0, b: 0 }, set2: { a: 0, b: 0 }, set3: { a: 0, b: 0 } },
+        phase: group.phase || 1
+      }))
+    );
 
-  const { error } = await supabase.from('matches').upsert(rows);
-  if (error) throw error;
+    const { error } = await supabase
+      .from('matches')
+      .insert(matchesToInsert);
+
+    if (error) throw error;
+  } catch (error) {
+    console.error('Error creating matches:', error);
+    throw error;
+  }
 };
 
 export const updateMatchScoreDB = async (matchId: string, score: MatchScore) => {

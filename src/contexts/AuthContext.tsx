@@ -50,7 +50,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_, session) => {
       if (session?.user) {
         checkUserRole(session.user.id, session.user.email || '');
       } else {
