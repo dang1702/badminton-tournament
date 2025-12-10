@@ -118,3 +118,21 @@ export const clearAllMatches = async () => {
   const { error } = await supabase.from('matches').delete().neq('id', 'placeholder');
   if (error) throw error;
 };
+
+// --- Admin User Management ---
+export const fetchAdminUsers = async () => {
+  const { data, error } = await supabase
+    .from('admin_users')
+    .select('*')
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data;
+};
+
+export const approveAdmin = async (userId: string) => {
+  const { error } = await supabase
+    .from('admin_users')
+    .update({ approved: true })
+    .eq('id', userId);
+  if (error) throw error;
+};

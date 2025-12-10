@@ -5,7 +5,9 @@ import { GroupDisplay } from "./components/GroupDisplay";
 import { MatchList } from "./components/MatchList";
 import { StandingsTable } from "./components/StandingsTable";
 import { KnockoutBracket } from "./components/KnockoutBracket";
+import { AuthModal } from "./components/AuthModal";
 import { LanguageProvider, useLanguage } from "./contexts/LanguageContext";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import {
   divideGroups,
   generateRoundRobinMatches,
@@ -13,7 +15,7 @@ import {
   calculateStandings,
 } from "./utils/tournamentUtils";
 import type { Team, GroupMatch, TeamStats, Match } from "./utils/tournamentUtils";
-import { Wand2, PlayCircle, Trophy, Medal, Loader2, RotateCcw } from "lucide-react";
+import { Wand2, PlayCircle, Trophy, Medal, Loader2, RotateCcw, Shield, Eye } from "lucide-react";
 import {
   fetchTeams,
   createTeam,
@@ -27,10 +29,13 @@ import {
   clearAllMatches,
 } from "./utils/supabaseService";
 import { supabase } from "./utils/supabaseClient";
+import { AdminPanel } from "./components/AdminPanel";
 
 const AppContent = () => {
   const { t } = useLanguage();
+  const { user, loading: authLoading, hasPermission, signOut } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const [teams, setTeams] = useState<Team[]>([]);
   const [miniGroups, setMiniGroups] = useState<{ [key: string]: Team[][] }>({});
   const [matches, setMatches] = useState<GroupMatch[]>([]);
@@ -38,7 +43,17 @@ const AppContent = () => {
   const [standings, setStandings] = useState<{ [key: string]: TeamStats[] }>({});
   const [phase, setPhase] = useState(1);
 
-  // Separate fetch logic to reuse without triggering loading state
+  useEffect(() => {
+    if (!authLoading) {
+      if (!user) {
+        setShowAuthModal(true);
+        setLoading(false);
+      } else {
+        refreshData();
+      }
+    }
+  }, [authLoading, user]);
+
   const refreshData = async (silent = false) => {
     if (!silent) setLoading(true);
     try {
@@ -60,13 +75,9 @@ const AppContent = () => {
           groupedMatches[m.group].push(m);
         });
 
-        // Ensure grouped matches are sorted by ID or another property if possible
-        // But the main fetchMatches already sorts by ID.
-        // We just need to make sure group order is consistent if needed.
-        
         const groupMatchList: GroupMatch[] = Object.keys(groupedMatches).sort().map(gName => ({
           group: gName,
-          matchList: groupedMatches[gName].sort((a: Match, b: Match) => a.id.localeCompare(b.id)) // Sort matches within group
+          matchList: groupedMatches[gName].sort((a: Match, b: Match) => a.id.localeCompare(b.id))
         }));
         
         setMatches(groupMatchList);
@@ -79,11 +90,9 @@ const AppContent = () => {
     }
   };
 
-  // --- Initial Load ---
   useEffect(() => {
     refreshData();
 
-    // --- Realtime Subscription ---
     const channel = supabase
       .channel('schema-db-changes')
       .on(
@@ -91,7 +100,6 @@ const AppContent = () => {
         { event: '*', schema: 'public' },
         () => {
           console.log('Change detected, refreshing silently...');
-          // Use silent refresh to avoid UI flicker
           refreshData(true);
         }
       )
@@ -102,38 +110,31 @@ const AppContent = () => {
     };
   }, []);
 
-  // --- Actions ---
-
   const handleAddTeam = async (name: string) => {
     try {
-      // Optimistic update
-      const tempTeam = { id: Date.now(), name }; // Temp ID
+      const tempTeam = { id: Date.now(), name };
       setTeams([...teams, tempTeam]);
       
       const newTeam = await createTeam(name);
-      // Replace temp with real
       setTeams(prev => prev.map(t => t.id === tempTeam.id ? newTeam : t));
     } catch (e) {
       console.error(e);
-      refreshData(true); // Revert on error
+      refreshData(true);
     }
   };
 
   const handleUpdateTeam = async (id: number, newName: string) => {
     try {
-      // Optimistic update
       setTeams(teams.map(t => t.id === id ? { ...t, name: newName } : t));
-      
       await updateTeam(id, newName);
     } catch (e) {
       console.error(e);
-      refreshData(true); // Revert on error
+      refreshData(true);
     }
   };
 
   const handleRemoveTeam = async (id: number) => {
     try {
-      // Optimistic
       setTeams(teams.filter((t) => t.id !== id));
       await deleteTeam(id);
     } catch (e) {
@@ -146,14 +147,12 @@ const AppContent = () => {
     if (!confirm(t('resetConfirm'))) return;
 
     try {
-        // Optimistic UI update first
         setPhase(1);
         setMiniGroups({});
         setMatches([]);
         setStandings({});
         setActiveTab("groups");
 
-        // DB operations in background
         await clearAllMatches();
         await updateSetting('phase', 1);
         await updateSetting('miniGroups', {});
@@ -185,11 +184,8 @@ const AppContent = () => {
   };
 
   const handleUpdateGroups = async (newGroups: { [key: string]: Team[][] }) => {
-    // Optimistic
     setMiniGroups(newGroups);
-    // DB Update
     await updateSetting('miniGroups', newGroups);
-    // If matches exist, we might need to warn user or clear them
     if (matches.length > 0) {
         if(confirm("Groups updated. Clear existing matches to regenerate?")) {
             setMatches([]);
@@ -216,13 +212,11 @@ const AppContent = () => {
       allMatches.push({ group: g.name, matchList, phase: 2 });
     });
 
-    // Optimistic
     setMatches(allMatches);
     setPhase(2);
     setActiveTab("matches");
     updateStandings(allMatches, finalGroups);
 
-    // DB
     await createMatches(allMatches);
     await updateSetting('phase', 2);
   };
@@ -270,13 +264,11 @@ const AppContent = () => {
       rankingMatches.push({ group: g.name, matchList, phase: 3 });
     });
 
-    // Optimistic
     setMatches(rankingMatches);
     setPhase(3);
     setActiveTab("matches");
     updateStandings(rankingMatches, rankingGroups);
 
-    // DB
     await clearAllMatches();
     await createMatches(rankingMatches);
     await updateSetting('phase', 3);
@@ -322,7 +314,6 @@ const AppContent = () => {
   };
 
   const handleUpdateScore = async (matchId: string, setIndex: 1 | 2 | 3, team: 'a' | 'b', val: number) => {
-    // 1. Optimistic Update: Update UI IMMEDIATELY
     const updatedMatches = matches.map(group => ({
       ...group,
       matchList: group.matchList.map(m => {
@@ -338,7 +329,6 @@ const AppContent = () => {
     setMatches(updatedMatches);
     recalculateStandings(updatedMatches, phase, miniGroups);
 
-    // 2. Background DB Update
     try {
         const matchToUpdate = updatedMatches.flatMap(g => g.matchList).find(m => m.id === matchId);
         if (matchToUpdate && matchToUpdate.score) {
@@ -346,12 +336,10 @@ const AppContent = () => {
         }
     } catch (e) {
         console.error("Failed to update score in DB", e);
-        // Silent refresh to revert if failed
         refreshData(true);
     }
   };
 
-  // Helper to recalculate standings based on current data
   const recalculateStandings = (currentMatches: GroupMatch[], currentPhase: number, currentGroups: any) => {
     if (currentPhase === 4) return;
 
@@ -393,6 +381,45 @@ const AppContent = () => {
     setStandings(newStandings);
   };
 
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <AuthModal isOpen={showAuthModal} onClose={() => {}} />
+      </div>
+    );
+  }
+
+  if (user.role === 'admin' && user.approved === false) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="text-center p-8 bg-white rounded-2xl shadow-xl max-w-md">
+          <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Shield className="w-8 h-8 text-amber-600" />
+          </div>
+          <h2 className="text-xl font-bold text-slate-800 mb-2">Access Not Available</h2>
+          <p className="text-slate-600 mb-4">
+            Your account does not have the required permissions. 
+            Please contact the administrator to assign proper roles.
+          </p>
+          <div className="space-y-3">
+            <p className="text-sm text-slate-500">
+              Email: {user.email}
+            </p>
+            <button
+              onClick={() => {
+                signOut();
+                setShowAuthModal(true);
+              }}
+              className="px-4 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-700 w-full"
+            >
+              Sign Out
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
@@ -410,9 +437,8 @@ const AppContent = () => {
 
       <main className="max-w-7xl mx-auto px-4 py-8">
         <div className="grid lg:grid-cols-12 gap-8 items-start">
-          {/* Sidebar */}
           <div className="lg:col-span-4 space-y-6 sticky top-24">
-            {phase === 1 && (
+            {phase === 1 && hasPermission('write') && (
               <TeamManager 
                 teams={teams} 
                 onAddTeam={handleAddTeam}
@@ -421,7 +447,11 @@ const AppContent = () => {
               />
             )}
 
-            {/* Standings Preview */}
+            {/* Admin Panel for all approved admins */}
+            {user?.role === 'admin' && user?.approved === true && (
+              <AdminPanel />
+            )}
+
             {phase >= 2 && phase !== 4 && Object.keys(standings).length > 0 && (
               <div className="space-y-4">
                 <h3 className="font-bold text-slate-800">{t('standings')}</h3>
@@ -431,81 +461,92 @@ const AppContent = () => {
               </div>
             )}
 
-            {/* Control Panel */}
-            <div className="bg-white/70 backdrop-blur-sm p-6 rounded-2xl shadow-xl shadow-slate-200/50 border border-white/20">
-              <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                {t('controlCenter')}
-              </h3>
-              <div className="space-y-3">
-                {phase < 2 && (
-                  <button
-                    onClick={handleGenerateMiniGroups}
-                    disabled={teams.length < 12}
-                    className="group w-full py-3.5 px-4 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-300 text-white rounded-xl font-bold transition-all shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2"
-                  >
-                    <Wand2 className="w-5 h-5" />
-                    {t('genGroups')}
-                  </button>
-                )}
-                
-                {phase >= 1.5 && phase < 2 && (
-                  <button
-                    onClick={handleCreateGroupMatches}
-                    className="group w-full py-3.5 px-4 bg-purple-600 hover:bg-purple-500 text-white rounded-xl font-bold transition-all shadow-lg shadow-purple-500/20 flex items-center justify-center gap-2"
-                  >
-                    <PlayCircle className="w-5 h-5" />
-                    {t('startGroupStage')}
-                  </button>
-                )}
+            {hasPermission('write') && (
+              <div className="bg-white/70 backdrop-blur-sm p-6 rounded-2xl shadow-xl shadow-slate-200/50 border border-white/20">
+                <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                  {t('controlCenter')}
+                </h3>
+                <div className="space-y-3">
+                  {phase < 2 && (
+                    <button
+                      onClick={handleGenerateMiniGroups}
+                      disabled={teams.length < 12}
+                      className="group w-full py-3.5 px-4 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-300 text-white rounded-xl font-bold transition-all shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2"
+                    >
+                      <Wand2 className="w-5 h-5" />
+                      {t('genGroups')}
+                    </button>
+                  )}
+                  
+                  {phase >= 1.5 && phase < 2 && (
+                    <button
+                      onClick={handleCreateGroupMatches}
+                      className="group w-full py-3.5 px-4 bg-purple-600 hover:bg-purple-500 text-white rounded-xl font-bold transition-all shadow-lg shadow-purple-500/20 flex items-center justify-center gap-2"
+                    >
+                      <PlayCircle className="w-5 h-5" />
+                      {t('startGroupStage')}
+                    </button>
+                  )}
 
-                {phase === 2 && (
-                  <div className="space-y-3">
-                    <div className="p-3 bg-indigo-50 border border-indigo-100 rounded-lg text-sm text-indigo-700">
-                        <p className="font-medium mb-1">{t('phaseGroup')}</p>
-                        <p className="opacity-80">{t('phaseGroupDesc')}</p>
+                  {phase === 2 && (
+                    <div className="space-y-3">
+                      <div className="p-3 bg-indigo-50 border border-indigo-100 rounded-lg text-sm text-indigo-700">
+                          <p className="font-medium mb-1">{t('phaseGroup')}</p>
+                          <p className="opacity-80">{t('phaseGroupDesc')}</p>
+                      </div>
+                      <button
+                          onClick={handleStartRankingRound}
+                          className="group w-full py-3.5 px-4 bg-amber-500 hover:bg-amber-400 text-white rounded-xl font-bold transition-all shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2"
+                      >
+                          <Medal className="w-5 h-5" />
+                          {t('startRankingRound')}
+                      </button>
                     </div>
-                    <button
-                        onClick={handleStartRankingRound}
-                        className="group w-full py-3.5 px-4 bg-amber-500 hover:bg-amber-400 text-white rounded-xl font-bold transition-all shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2"
-                    >
-                        <Medal className="w-5 h-5" />
-                        {t('startRankingRound')}
-                    </button>
-                  </div>
-                )}
+                  )}
 
-                {phase === 3 && (
-                  <div className="space-y-3">
-                    <div className="p-3 bg-amber-50 border border-amber-100 rounded-lg text-sm text-amber-700">
-                        <p className="font-medium mb-1">{t('phaseRanking')}</p>
-                        <p className="opacity-80">{t('phaseRankingDesc')}</p>
+                  {phase === 3 && (
+                    <div className="space-y-3">
+                      <div className="p-3 bg-amber-50 border border-amber-100 rounded-lg text-sm text-amber-700">
+                          <p className="font-medium mb-1">{t('phaseRanking')}</p>
+                          <p className="opacity-80">{t('phaseRankingDesc')}</p>
+                      </div>
+                      <button
+                          onClick={handleCreateKnockout}
+                          className="group w-full py-3.5 px-4 bg-rose-500 hover:bg-rose-400 text-white rounded-xl font-bold transition-all shadow-lg shadow-rose-500/20 flex items-center justify-center gap-2"
+                      >
+                          <Trophy className="w-5 h-5" />
+                          {t('genKnockout')}
+                      </button>
                     </div>
-                    <button
-                        onClick={handleCreateKnockout}
-                        className="group w-full py-3.5 px-4 bg-rose-500 hover:bg-rose-400 text-white rounded-xl font-bold transition-all shadow-lg shadow-rose-500/20 flex items-center justify-center gap-2"
-                    >
-                        <Trophy className="w-5 h-5" />
-                        {t('genKnockout')}
-                    </button>
-                  </div>
-                )}
+                  )}
 
-                {/* Reset Button (Always visible after Phase 1) */}
-                {phase > 1 && (
-                    <button
-                        onClick={handleResetTournament}
-                        className="group w-full py-2 px-4 bg-slate-100 hover:bg-red-50 text-slate-500 hover:text-red-600 border border-slate-200 hover:border-red-200 rounded-xl font-bold transition-all flex items-center justify-center gap-2 mt-4"
-                    >
-                        <RotateCcw className="w-4 h-4" />
-                        {t('resetTournament')}
-                    </button>
-                )}
+                  {phase > 1 && (
+                      <button
+                          onClick={handleResetTournament}
+                          className="group w-full py-2 px-4 bg-slate-100 hover:bg-red-50 text-slate-500 hover:text-red-600 border border-slate-200 hover:border-red-200 rounded-xl font-bold transition-all flex items-center justify-center gap-2 mt-4"
+                      >
+                          <RotateCcw className="w-4 h-4" />
+                          {t('resetTournament')}
+                      </button>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
+
+            {user.role === 'guest' && (
+              <div className="bg-emerald-50 border border-emerald-200 p-4 rounded-xl">
+                <div className="flex items-center gap-2 mb-2">
+                  <Eye className="w-5 h-5 text-emerald-600" />
+                  <h3 className="font-semibold text-emerald-800">Guest Mode</h3>
+                </div>
+                <p className="text-sm text-emerald-700">
+                  You're viewing in read-only mode. Contact an admin for editing access.
+                </p>
+              </div>
+            )}
           </div>
 
-          {/* Main Content */}
           <div className="lg:col-span-8 min-h-[500px]">
             {(miniGroups.A || matches.length > 0) && (
               <div className="mb-8 flex p-1 bg-white/80 backdrop-blur-sm rounded-xl border border-slate-200 shadow-sm w-fit overflow-x-auto">
@@ -528,11 +569,16 @@ const AppContent = () => {
               {activeTab === "groups" && (
                 <GroupDisplay 
                   miniGroups={miniGroups} 
-                  onUpdateGroups={handleUpdateGroups}
-                  isEditable={phase < 2} // Only editable before matches start
+                  onUpdateGroups={hasPermission('write') ? handleUpdateGroups : undefined}
+                  isEditable={phase < 2 && hasPermission('write')}
                 />
               )}
-              {activeTab === "matches" && <MatchList matches={matches} onUpdateScore={handleUpdateScore} />}
+              {activeTab === "matches" && (
+                <MatchList 
+                  matches={matches} 
+                  onUpdateScore={hasPermission('write') ? handleUpdateScore : undefined} 
+                />
+              )}
               {activeTab === "standings" && phase !== 4 && (
                 <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
                    {Object.entries(standings).map(([name, stats]) => (
@@ -551,8 +597,10 @@ const AppContent = () => {
 
 export default function App() {
   return (
-    <LanguageProvider>
-      <AppContent />
-    </LanguageProvider>
+    <AuthProvider>
+      <LanguageProvider>
+        <AppContent />
+      </LanguageProvider>
+    </AuthProvider>
   );
 }

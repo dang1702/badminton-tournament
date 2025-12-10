@@ -64,7 +64,11 @@ const SortableTeamItem = ({ team, index }: { team: Team; index: number }) => {
   );
 };
 
-export const GroupDisplay: React.FC<GroupDisplayProps> = ({ miniGroups, onUpdateGroups, isEditable = false }) => {
+export const GroupDisplay: React.FC<GroupDisplayProps> = ({ 
+  miniGroups, 
+  onUpdateGroups, 
+  isEditable = true 
+}) => {
   const { t } = useLanguage();
   const [isEditing, setIsEditing] = useState(false);
   const [localGroups, setLocalGroups] = useState(miniGroups);
@@ -164,6 +168,9 @@ export const GroupDisplay: React.FC<GroupDisplayProps> = ({ miniGroups, onUpdate
   };
 
   if (!miniGroups.A) return null;
+
+  // Make sure drag and drop is only enabled when isEditable is true and onUpdateGroups is provided
+  const isDragEnabled = isEditable && onUpdateGroups;
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">

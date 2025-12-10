@@ -5,12 +5,19 @@ import { useLanguage } from '../contexts/LanguageContext';
 
 interface MatchListProps {
   matches: GroupMatch[];
-  onUpdateScore: (matchId: string, setIndex: 1 | 2 | 3, team: 'a' | 'b', score: number) => void;
+  onUpdateScore?: (matchId: string, setIndex: 1 | 2 | 3, team: 'a' | 'b', score: number) => void;
 }
 
 export const MatchList: React.FC<MatchListProps> = ({ matches, onUpdateScore }) => {
   const { t } = useLanguage();
   if (matches.length === 0) return null;
+
+  const handleScoreChange = (matchId: string, setIndex: 1 | 2 | 3, team: 'a' | 'b', value: string) => {
+    const score = parseInt(value) || 0;
+    if (onUpdateScore) {
+      onUpdateScore(matchId, setIndex, team, score);
+    }
+  };
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
@@ -57,8 +64,11 @@ export const MatchList: React.FC<MatchListProps> = ({ matches, onUpdateScore }) 
                             min="0"
                             placeholder="0"
                             value={match.score?.[`set${set}` as keyof typeof match.score]?.a || ''}
-                            onChange={(e) => onUpdateScore(match.id, set as 1|2|3, 'a', parseInt(e.target.value) || 0)}
-                            className="w-10 h-8 text-center text-sm font-bold border border-slate-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none"
+                            onChange={(e) => handleScoreChange(match.id, set as 1|2|3, 'a', e.target.value)}
+                            disabled={!onUpdateScore}
+                            className={`w-10 h-8 text-center text-sm font-bold border rounded ${
+                              !onUpdateScore ? 'bg-slate-100 text-slate-500' : 'border-slate-300 focus:ring-2 focus:ring-purple-500 focus:border-purple-500'
+                            }`}
                           />
                         ))}
                       </div>
@@ -74,8 +84,11 @@ export const MatchList: React.FC<MatchListProps> = ({ matches, onUpdateScore }) 
                             min="0"
                             placeholder="0"
                             value={match.score?.[`set${set}` as keyof typeof match.score]?.b || ''}
-                            onChange={(e) => onUpdateScore(match.id, set as 1|2|3, 'b', parseInt(e.target.value) || 0)}
-                            className="w-10 h-8 text-center text-sm font-bold border border-slate-300 rounded focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none"
+                            onChange={(e) => handleScoreChange(match.id, set as 1|2|3, 'b', e.target.value)}
+                            disabled={!onUpdateScore}
+                            className={`w-10 h-8 text-center text-sm font-bold border rounded ${
+                              !onUpdateScore ? 'bg-slate-100 text-slate-500' : 'border-slate-300 focus:ring-2 focus:ring-purple-500 focus:border-purple-500'
+                            }`}
                           />
                         ))}
                       </div>
