@@ -18,6 +18,7 @@ import {
   fetchTeams,
   createTeam,
   deleteTeam,
+  updateTeam,
   fetchSettings,
   updateSetting,
   fetchMatches,
@@ -112,6 +113,18 @@ const AppContent = () => {
       const newTeam = await createTeam(name);
       // Replace temp with real
       setTeams(prev => prev.map(t => t.id === tempTeam.id ? newTeam : t));
+    } catch (e) {
+      console.error(e);
+      refreshData(true); // Revert on error
+    }
+  };
+
+  const handleUpdateTeam = async (id: number, newName: string) => {
+    try {
+      // Optimistic update
+      setTeams(teams.map(t => t.id === id ? { ...t, name: newName } : t));
+      
+      await updateTeam(id, newName);
     } catch (e) {
       console.error(e);
       refreshData(true); // Revert on error
@@ -402,7 +415,8 @@ const AppContent = () => {
             {phase === 1 && (
               <TeamManager 
                 teams={teams} 
-                onAddTeam={handleAddTeam} 
+                onAddTeam={handleAddTeam}
+                onUpdateTeam={handleUpdateTeam}
                 onRemoveTeam={handleRemoveTeam}
               />
             )}

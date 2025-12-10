@@ -1,17 +1,20 @@
 import React, { useState } from 'react';
-import { Plus, Users, Trash2, Shield } from 'lucide-react';
+import { Plus, Users, Trash2, Shield, Edit3, Check, X } from 'lucide-react';
 import type { Team } from '../utils/tournamentUtils';
 import { useLanguage } from '../contexts/LanguageContext';
 
 interface TeamManagerProps {
   teams: Team[];
   onAddTeam: (name: string) => void;
-  onRemoveTeam?: (id: number) => void;
+  onUpdateTeam: (id: number, newName: string) => void;
+  onRemoveTeam: (id: number) => void;
 }
 
-export const TeamManager: React.FC<TeamManagerProps> = ({ teams, onAddTeam, onRemoveTeam }) => {
+export const TeamManager: React.FC<TeamManagerProps> = ({ teams, onAddTeam, onUpdateTeam, onRemoveTeam }) => {
   const { t } = useLanguage();
   const [input, setInput] = useState('');
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingName, setEditingName] = useState('');
 
   const handleAdd = () => {
     if (input.trim()) {
@@ -22,6 +25,32 @@ export const TeamManager: React.FC<TeamManagerProps> = ({ teams, onAddTeam, onRe
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') handleAdd();
+  };
+
+  const handleStartEdit = (team: Team) => {
+    setEditingId(team.id);
+    setEditingName(team.name);
+  };
+
+  const handleSaveEdit = () => {
+    if (editingId && editingName.trim()) {
+      onUpdateTeam(editingId, editingName.trim());
+      setEditingId(null);
+      setEditingName('');
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setEditingName('');
+  };
+
+  const handleEditKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSaveEdit();
+    } else if (e.key === 'Escape') {
+      handleCancelEdit();
+    }
   };
 
   return (
@@ -74,22 +103,58 @@ export const TeamManager: React.FC<TeamManagerProps> = ({ teams, onAddTeam, onRe
                 key={team.id}
                 className="group flex items-center justify-between p-3 bg-white border border-slate-100 hover:border-emerald-500/50 rounded-xl shadow-sm hover:shadow-md transition-all duration-200"
               >
-                <div className="flex items-center gap-3">
-                  <span className="w-6 h-6 flex items-center justify-center text-xs font-bold text-slate-400 bg-slate-100 rounded-md group-hover:bg-emerald-100 group-hover:text-emerald-600 transition-colors">
-                    {index + 1}
-                  </span>
-                  <span className="font-semibold text-slate-700 group-hover:text-slate-900 transition-colors">
-                    {team.name}
-                  </span>
-                </div>
-                {onRemoveTeam && (
-                  <button
-                    onClick={() => onRemoveTeam(team.id)}
-                    className="opacity-0 group-hover:opacity-100 p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
-                    title="Remove team"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                {editingId === team.id ? (
+                  <>
+                    <input
+                      type="text"
+                      value={editingName}
+                      onChange={(e) => setEditingName(e.target.value)}
+                      onKeyDown={handleEditKeyDown}
+                      className="flex-1 px-2 py-1 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      autoFocus
+                    />
+                    <button
+                      onClick={handleSaveEdit}
+                      className="p-1.5 text-green-600 hover:bg-green-100 rounded transition-colors"
+                      title={t('save')}
+                    >
+                      <Check className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={handleCancelEdit}
+                      className="p-1.5 text-slate-500 hover:bg-slate-200 rounded transition-colors"
+                      title={t('cancel')}
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-3">
+                      <span className="w-6 h-6 flex items-center justify-center text-xs font-bold text-slate-400 bg-slate-100 rounded-md group-hover:bg-emerald-100 group-hover:text-emerald-600 transition-colors">
+                        {index + 1}
+                      </span>
+                      <span className="font-semibold text-slate-700 group-hover:text-slate-900 transition-colors">
+                        {team.name}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => handleStartEdit(team)}
+                        className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                        title={t('edit')}
+                      >
+                        <Edit3 className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => onRemoveTeam(team.id)}
+                        className="p-1.5 text-slate-500 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
+                        title="Remove team"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </>
                 )}
               </div>
             ))}

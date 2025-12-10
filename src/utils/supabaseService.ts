@@ -26,6 +26,18 @@ export const deleteTeam = async (id: number) => {
   if (error) throw error;
 };
 
+export const updateTeam = async (id: number, name: string): Promise<Team> => {
+  const { data, error } = await supabase
+    .from('teams')
+    .update({ name })
+    .eq('id', id)
+    .select()
+    .single();
+  
+  if (error) throw error;
+  return data;
+};
+
 // --- Settings (Global State) ---
 export const fetchSettings = async () => {
   const { data, error } = await supabase.from('settings').select('*');
