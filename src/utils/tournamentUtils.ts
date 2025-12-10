@@ -10,22 +10,16 @@ export interface MatchScore {
 }
 
 export interface Match {
-  id: string; // Added ID for updates
+  id: string;
   teamA: Team;
   teamB: Team;
   score?: MatchScore;
-  winnerId?: number;
-}
-
-export interface Group {
-  name: string;
-  teams: Team[];
 }
 
 export interface GroupMatch {
   group: string;
   matchList: Match[];
-  phase?: number; // Add phase property
+  phase?: number;
 }
 
 export interface TeamStats {
@@ -35,22 +29,12 @@ export interface TeamStats {
   lost: number;
   setsWon: number;
   setsLost: number;
-  setsDiff: number; // Add this
+  setsDiff: number;
   pointsWon: number;
   pointsLost: number;
   pointsDiff: number;
-  points: number; // Add this (match points, usually 3 for win, 1 for loss, 0 for no-show)
+  points: number;
 }
-
-// Helpers
-export const shuffleArray = <T,>(array: T[]): T[] => {
-  const arr = [...array];
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  return arr;
-};
 
 export const generateRoundRobinMatches = (teams: Team[]): Match[] => {
   const matches: Match[] = [];
@@ -66,11 +50,8 @@ export const generateRoundRobinMatches = (teams: Team[]): Match[] => {
   return matches;
 };
 
-// New: Generate Knockout Matches (Internal Elimination)
 export const generateKnockoutMatches = (teams: Team[]): Match[] => {
   const matches: Match[] = [];
-  // Ensure we have even number of teams, or handle bye (simple version: ignore odd team)
-  // Teams are assumed to be shuffled already
   for (let i = 0; i < teams.length; i += 2) {
     if (i + 1 < teams.length) {
        matches.push({
@@ -110,18 +91,18 @@ export const calculateStandings = (teams: Team[], matches: Match[]): TeamStats[]
       lost: 0,
       setsWon: 0,
       setsLost: 0,
-      setsDiff: 0, // Add this
+      setsDiff: 0,
       pointsWon: 0,
       pointsLost: 0,
       pointsDiff: 0,
-      points: 0 // Add this
+      points: 0
     };
   });
 
   matches.forEach(m => {
     if (!m.score) return;
 
-    // Check if match is "played" (at least one set has scores)
+    // Check if match is "played"
     const isPlayed = (m.score.set1.a > 0 || m.score.set1.b > 0);
     if (!isPlayed) return;
 
@@ -132,12 +113,11 @@ export const calculateStandings = (teams: Team[], matches: Match[]): TeamStats[]
       teamA.played++;
       teamB.played++;
 
-      // Calculate Sets
       let setsA = 0;
       let setsB = 0;
 
       [m.score.set1, m.score.set2, m.score.set3].forEach(set => {
-        if (set.a === 0 && set.b === 0) return; // Skip unplayed sets
+        if (set.a === 0 && set.b === 0) return;
         
         teamA.pointsWon += set.a;
         teamA.pointsLost += set.b;
@@ -153,17 +133,15 @@ export const calculateStandings = (teams: Team[], matches: Match[]): TeamStats[]
       teamB.setsWon += setsB;
       teamB.setsLost += setsA;
 
-      // Determine Winner and assign match points
+      // Determine Winner
       if (setsA > setsB) {
         teamA.won++;
         teamB.lost++;
-        teamA.points += 3; // 3 points for win
-        teamB.points += 0; // 0 points for loss
+        teamA.points += 3;
       } else if (setsB > setsA) {
         teamB.won++;
         teamA.lost++;
-        teamB.points += 3; // 3 points for win
-        teamA.points += 0; // 0 points for loss
+        teamB.points += 3;
       }
       
       // Update Diffs
@@ -175,11 +153,8 @@ export const calculateStandings = (teams: Team[], matches: Match[]): TeamStats[]
   });
 
   return Object.values(stats).sort((a, b) => {
-    // Sort by match points first
     if (b.points !== a.points) return b.points - a.points;
-    // Then by sets difference
     if (b.setsDiff !== a.setsDiff) return b.setsDiff - a.setsDiff;
-    // Finally by points difference
     return b.pointsDiff - a.pointsDiff;
   });
 };

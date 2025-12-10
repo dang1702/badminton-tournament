@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { X, Users, Shield, Eye, Settings } from 'lucide-react';
+import { X, Shield, Eye } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { useLanguage } from '../contexts/LanguageContext';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -10,7 +9,6 @@ interface AuthModalProps {
 
 export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const { signInAsGuest, signInAsAdmin, signUpAsAdmin } = useAuth();
-  const { t } = useLanguage();
   const [mode, setMode] = useState<'select' | 'login' | 'register'>('select');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

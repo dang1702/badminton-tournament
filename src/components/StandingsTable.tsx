@@ -1,5 +1,4 @@
 import React from 'react';
-import { Trophy, TrendingUp, AlertCircle } from 'lucide-react';
 import type { TeamStats } from '../utils/tournamentUtils';
 import { useLanguage } from '../contexts/LanguageContext';
 
