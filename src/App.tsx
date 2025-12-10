@@ -81,7 +81,12 @@ const AppContent = () => {
         }));
         
         setMatches(groupMatchList);
-        recalculateStandings(groupMatchList, dbSettings.phase, dbSettings.miniGroups);
+        
+        // Recalculate standings for non-knockout phases only
+        if (dbSettings.phase < 4) {
+          recalculateStandings(groupMatchList, dbSettings.phase, dbSettings.miniGroups);
+        }
+        // Don't auto-update knockout bracket on refresh to avoid conflicts
       }
     } catch (error) {
       console.error("Error loading data:", error);
@@ -327,16 +332,116 @@ const AppContent = () => {
     }));
 
     setMatches(updatedMatches);
-    recalculateStandings(updatedMatches, phase, miniGroups);
+    
+    // Only recalculate standings for non-knockout phases
+    if (phase < 4) {
+      recalculateStandings(updatedMatches, phase, miniGroups);
+    }
 
     try {
         const matchToUpdate = updatedMatches.flatMap(g => g.matchList).find(m => m.id === matchId);
         if (matchToUpdate && matchToUpdate.score) {
             await updateMatchScoreDB(matchId, matchToUpdate.score);
+            
+            // Only update knockout bracket after successful DB update
+            // and only for semi-final matches
+            if (phase === 4 && (matchId === 'semi1' || matchId === 'semi2')) {
+              setTimeout(() => updateKnockoutBracket(updatedMatches), 100);
+            }
         }
     } catch (e) {
         console.error("Failed to update score in DB", e);
         refreshData(true);
+    }
+  };
+
+  // New function to update knockout bracket based on semi-final results
+  const updateKnockoutBracket = async (currentMatches: GroupMatch[]) => {
+    const semi1Match = currentMatches.find(g => g.group === "Semi Final 1")?.matchList[0];
+    const semi2Match = currentMatches.find(g => g.group === "Semi Final 2")?.matchList[0];
+
+    if (!semi1Match || !semi2Match) return;
+
+    const getMatchResult = (match: Match) => {
+      if (!match.score) return { winner: null, loser: null };
+      
+      let setsA = 0, setsB = 0;
+      [match.score.set1, match.score.set2, match.score.set3].forEach(set => {
+        // Skip unplayed sets
+        if (set.a === 0 && set.b === 0) return;
+        if (set.a > set.b) setsA++;
+        if (set.b > set.a) setsB++;
+      });
+      
+      // Only return result if match is completed (someone won at least 2 sets)
+      if (setsA >= 2) return { winner: match.teamA, loser: match.teamB };
+      if (setsB >= 2) return { winner: match.teamB, loser: match.teamA };
+      return { winner: null, loser: null }; // Match not completed
+    };
+
+    const semi1Result = getMatchResult(semi1Match);
+    const semi2Result = getMatchResult(semi2Match);
+
+    // Only update if we have winners from both semifinals
+    if (!semi1Result.winner || !semi2Result.winner) return;
+
+    const updatedMatches = currentMatches.map(group => {
+      if (group.group === "Final") {
+        const finalMatch = group.matchList[0];
+        // Only update if teams are different from current
+        if (finalMatch.teamA.id !== semi1Result.winner!.id || 
+            finalMatch.teamB.id !== semi2Result.winner!.id) {
+          return {
+            ...group,
+            matchList: [{
+              ...finalMatch,
+              teamA: semi1Result.winner!,
+              teamB: semi2Result.winner!,
+              score: { set1: { a: 0, b: 0 }, set2: { a: 0, b: 0 }, set3: { a: 0, b: 0 } }
+            }]
+          };
+        }
+      }
+      
+      if (group.group === "Third Place") {
+        const thirdPlaceMatch = group.matchList[0];
+        // Only update if teams are different from current
+        if (thirdPlaceMatch.teamA.id !== semi1Result.loser!.id || 
+            thirdPlaceMatch.teamB.id !== semi2Result.loser!.id) {
+          return {
+            ...group,
+            matchList: [{
+              ...thirdPlaceMatch,
+              teamA: semi1Result.loser!,
+              teamB: semi2Result.loser!,
+              score: { set1: { a: 0, b: 0 }, set2: { a: 0, b: 0 }, set3: { a: 0, b: 0 } }
+            }]
+          };
+        }
+      }
+      
+      return group;
+    });
+
+    // Check if there are actual changes
+    const hasChanges = !currentMatches.every((group, index) => {
+      const updatedGroup = updatedMatches[index];
+      return group.matchList.every((match, matchIndex) => {
+        const updatedMatch = updatedGroup.matchList[matchIndex];
+        return match.teamA.id === updatedMatch.teamA.id && 
+               match.teamB.id === updatedMatch.teamB.id;
+      });
+    });
+
+    if (hasChanges) {
+      setMatches(updatedMatches);
+
+      // Update database with new bracket structure
+      try {
+        await createMatches(updatedMatches);
+      } catch (e) {
+        console.error("Failed to update knockout bracket in DB", e);
+      }
     }
   };
 

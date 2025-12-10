@@ -35,9 +35,11 @@ export interface TeamStats {
   lost: number;
   setsWon: number;
   setsLost: number;
+  setsDiff: number; // Add this
   pointsWon: number;
   pointsLost: number;
   pointsDiff: number;
+  points: number; // Add this (match points, usually 3 for win, 1 for loss, 0 for no-show)
 }
 
 // Helpers
@@ -108,9 +110,11 @@ export const calculateStandings = (teams: Team[], matches: Match[]): TeamStats[]
       lost: 0,
       setsWon: 0,
       setsLost: 0,
+      setsDiff: 0, // Add this
       pointsWon: 0,
       pointsLost: 0,
-      pointsDiff: 0
+      pointsDiff: 0,
+      points: 0 // Add this
     };
   });
 
@@ -149,24 +153,33 @@ export const calculateStandings = (teams: Team[], matches: Match[]): TeamStats[]
       teamB.setsWon += setsB;
       teamB.setsLost += setsA;
 
-      // Determine Winner
+      // Determine Winner and assign match points
       if (setsA > setsB) {
         teamA.won++;
         teamB.lost++;
+        teamA.points += 3; // 3 points for win
+        teamB.points += 0; // 0 points for loss
       } else if (setsB > setsA) {
         teamB.won++;
         teamA.lost++;
+        teamB.points += 3; // 3 points for win
+        teamA.points += 0; // 0 points for loss
       }
       
-      // Update Diff
+      // Update Diffs
+      teamA.setsDiff = teamA.setsWon - teamA.setsLost;
+      teamB.setsDiff = teamB.setsWon - teamB.setsLost;
       teamA.pointsDiff = teamA.pointsWon - teamA.pointsLost;
       teamB.pointsDiff = teamB.pointsWon - teamB.pointsLost;
     }
   });
 
   return Object.values(stats).sort((a, b) => {
-    if (b.won !== a.won) return b.won - a.won;
-    if ((b.setsWon - b.setsLost) !== (a.setsWon - a.setsLost)) return (b.setsWon - b.setsLost) - (a.setsWon - a.setsLost);
+    // Sort by match points first
+    if (b.points !== a.points) return b.points - a.points;
+    // Then by sets difference
+    if (b.setsDiff !== a.setsDiff) return b.setsDiff - a.setsDiff;
+    // Finally by points difference
     return b.pointsDiff - a.pointsDiff;
   });
 };

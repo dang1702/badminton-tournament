@@ -62,7 +62,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => subscription.unsubscribe();
   }, []);
 
-  const checkUserRole = async (userId: string, email: string) => {
+  const checkUserRole = (userId: string, email: string) => {
     // Simplified: All authenticated users are admins by default
     // No database check needed for now
     setUser({
