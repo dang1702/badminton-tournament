@@ -76,14 +76,44 @@ export const KnockoutBracket: React.FC<KnockoutBracketProps> = ({ matches }) => 
   const semiFinals = [semi1, semi2].filter(Boolean);
 
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 space-y-12 py-8">
-      <div className="flex items-center justify-center gap-3 mb-8">
-        <Trophy className="w-8 h-8 text-amber-500" />
-        <h2 className="text-3xl font-bold text-slate-900">{t('bracket')}</h2>
+    <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 space-y-8 sm:space-y-12 py-4 sm:py-8">
+      <div className="flex items-center justify-center gap-2 sm:gap-3 mb-6 sm:mb-8">
+        <Trophy className="w-6 h-6 sm:w-8 sm:h-8 text-amber-500" />
+        <h2 className="text-xl sm:text-3xl font-bold text-slate-900">{t('bracket')}</h2>
       </div>
 
       <div className="max-w-4xl mx-auto relative">
-        <div className="grid grid-cols-3 gap-8 items-center">
+        {/* Mobile Layout */}
+        <div className="block sm:hidden space-y-8">
+          {/* Semi Finals */}
+          <div>
+            <h3 className="text-lg font-bold text-slate-800 mb-4 text-center">{t('semiFinals')}</h3>
+            <div className="space-y-4">
+              {semiFinals.map((m, i) => (
+                <div key={i}>{renderMatchCard(m, `${t('semiFinals')} ${i + 1}`)}</div>
+              ))}
+            </div>
+          </div>
+          
+          {/* Finals */}
+          {final && (
+            <div>
+              <h3 className="text-lg font-bold text-slate-800 mb-4 text-center">{t('finals')}</h3>
+              <div>{renderMatchCard(final, t('finals'), true)}</div>
+            </div>
+          )}
+          
+          {/* Third Place */}
+          {thirdPlace && (
+            <div>
+              <h3 className="text-lg font-bold text-slate-800 mb-4 text-center">{t('thirdPlace')}</h3>
+              <div>{renderMatchCard(thirdPlace, t('thirdPlace'), false, true)}</div>
+            </div>
+          )}
+        </div>
+
+        {/* Desktop Layout */}
+        <div className="hidden sm:grid grid-cols-3 gap-8 items-center">
           {/* Semi Finals Column */}
           <div className="space-y-12">
             {semiFinals.map((m, i) => (

@@ -540,9 +540,9 @@ const AppContent = () => {
     <div className="min-h-screen bg-slate-50 font-sans pb-20 selection:bg-indigo-100 selection:text-indigo-700">
       <Header />
 
-      <main className="max-w-7xl mx-auto px-4 py-8">
-        <div className="grid lg:grid-cols-12 gap-8 items-start">
-          <div className="lg:col-span-4 space-y-6 sticky top-24">
+      <main className="max-w-7xl mx-auto px-2 sm:px-4 py-4 sm:py-8">
+        <div className="grid lg:grid-cols-12 gap-4 sm:gap-8 items-start">
+          <div className="lg:col-span-4 space-y-4 sm:space-y-6 lg:sticky lg:top-24">
             {phase === 1 && hasPermission('write') && (
               <TeamManager 
                 teams={teams} 
@@ -567,61 +567,61 @@ const AppContent = () => {
             )}
 
             {hasPermission('write') && (
-              <div className="bg-white/70 backdrop-blur-sm p-6 rounded-2xl shadow-xl shadow-slate-200/50 border border-white/20">
-                <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
+              <div className="bg-white/70 backdrop-blur-sm p-4 sm:p-6 rounded-2xl shadow-xl shadow-slate-200/50 border border-white/20">
+                <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2 text-sm sm:text-base">
                   <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
                   {t('controlCenter')}
                 </h3>
-                <div className="space-y-3">
+                <div className="space-y-2 sm:space-y-3">
                   {phase < 2 && (
                     <button
                       onClick={handleGenerateMiniGroups}
                       disabled={teams.length < 12}
-                      className="group w-full py-3.5 px-4 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-300 text-white rounded-xl font-bold transition-all shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2"
+                      className="group w-full py-3 sm:py-3.5 px-3 sm:px-4 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-300 text-white rounded-xl font-bold transition-all shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2 text-sm sm:text-base"
                     >
-                      <Wand2 className="w-5 h-5" />
-                      {t('genGroups')}
+                      <Wand2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                      <span className="truncate">{t('genGroups')}</span>
                     </button>
                   )}
                   
                   {phase >= 1.5 && phase < 2 && (
                     <button
                       onClick={handleCreateGroupMatches}
-                      className="group w-full py-3.5 px-4 bg-purple-600 hover:bg-purple-500 text-white rounded-xl font-bold transition-all shadow-lg shadow-purple-500/20 flex items-center justify-center gap-2"
+                      className="group w-full py-3 sm:py-3.5 px-3 sm:px-4 bg-purple-600 hover:bg-purple-500 text-white rounded-xl font-bold transition-all shadow-lg shadow-purple-500/20 flex items-center justify-center gap-2 text-sm sm:text-base"
                     >
-                      <PlayCircle className="w-5 h-5" />
-                      {t('startGroupStage')}
+                      <PlayCircle className="w-4 h-4 sm:w-5 sm:h-5" />
+                      <span className="truncate">{t('startGroupStage')}</span>
                     </button>
                   )}
 
                   {phase === 2 && (
-                    <div className="space-y-3">
-                      <div className="p-3 bg-indigo-50 border border-indigo-100 rounded-lg text-sm text-indigo-700">
+                    <div className="space-y-2 sm:space-y-3">
+                      <div className="p-3 bg-indigo-50 border border-indigo-100 rounded-lg text-xs sm:text-sm text-indigo-700">
                           <p className="font-medium mb-1">{t('phaseGroup')}</p>
                           <p className="opacity-80">{t('phaseGroupDesc')}</p>
                       </div>
                       <button
                           onClick={handleStartRankingRound}
-                          className="group w-full py-3.5 px-4 bg-amber-500 hover:bg-amber-400 text-white rounded-xl font-bold transition-all shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2"
+                          className="group w-full py-3 sm:py-3.5 px-3 sm:px-4 bg-amber-500 hover:bg-amber-400 text-white rounded-xl font-bold transition-all shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 text-sm sm:text-base"
                       >
-                          <Medal className="w-5 h-5" />
-                          {t('startRankingRound')}
+                          <Medal className="w-4 h-4 sm:w-5 sm:h-5" />
+                          <span className="truncate">{t('startRankingRound')}</span>
                       </button>
                     </div>
                   )}
 
                   {phase === 3 && (
-                    <div className="space-y-3">
-                      <div className="p-3 bg-amber-50 border border-amber-100 rounded-lg text-sm text-amber-700">
+                    <div className="space-y-2 sm:space-y-3">
+                      <div className="p-3 bg-amber-50 border border-amber-100 rounded-lg text-xs sm:text-sm text-amber-700">
                           <p className="font-medium mb-1">{t('phaseRanking')}</p>
                           <p className="opacity-80">{t('phaseRankingDesc')}</p>
                       </div>
                       <button
                           onClick={handleCreateKnockout}
-                          className="group w-full py-3.5 px-4 bg-rose-500 hover:bg-rose-400 text-white rounded-xl font-bold transition-all shadow-lg shadow-rose-500/20 flex items-center justify-center gap-2"
+                          className="group w-full py-3 sm:py-3.5 px-3 sm:px-4 bg-rose-500 hover:bg-rose-400 text-white rounded-xl font-bold transition-all shadow-lg shadow-rose-500/20 flex items-center justify-center gap-2 text-sm sm:text-base"
                       >
-                          <Trophy className="w-5 h-5" />
-                          {t('genKnockout')}
+                          <Trophy className="w-4 h-4 sm:w-5 sm:h-5" />
+                          <span className="truncate">{t('genKnockout')}</span>
                       </button>
                     </div>
                   )}
@@ -629,10 +629,10 @@ const AppContent = () => {
                   {phase > 1 && (
                       <button
                           onClick={handleResetTournament}
-                          className="group w-full py-2 px-4 bg-slate-100 hover:bg-red-50 text-slate-500 hover:text-red-600 border border-slate-200 hover:border-red-200 rounded-xl font-bold transition-all flex items-center justify-center gap-2 mt-4"
+                          className="group w-full py-2 px-3 sm:px-4 bg-slate-100 hover:bg-red-50 text-slate-500 hover:text-red-600 border border-slate-200 hover:border-red-200 rounded-xl font-bold transition-all flex items-center justify-center gap-2 mt-4 text-sm"
                       >
                           <RotateCcw className="w-4 h-4" />
-                          {t('resetTournament')}
+                          <span className="truncate">{t('resetTournament')}</span>
                       </button>
                   )}
                 </div>
@@ -640,33 +640,35 @@ const AppContent = () => {
             )}
 
             {user.role === 'guest' && (
-              <div className="bg-emerald-50 border border-emerald-200 p-4 rounded-xl">
+              <div className="bg-emerald-50 border border-emerald-200 p-3 sm:p-4 rounded-xl">
                 <div className="flex items-center gap-2 mb-2">
-                  <Eye className="w-5 h-5 text-emerald-600" />
-                  <h3 className="font-semibold text-emerald-800">Guest Mode</h3>
+                  <Eye className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600" />
+                  <h3 className="font-semibold text-emerald-800 text-sm sm:text-base">Guest Mode</h3>
                 </div>
-                <p className="text-sm text-emerald-700">
+                <p className="text-xs sm:text-sm text-emerald-700">
                   You're viewing in read-only mode. Contact an admin for editing access.
                 </p>
               </div>
             )}
           </div>
 
-          <div className="lg:col-span-8 min-h-[500px]">
+          <div className="lg:col-span-8 min-h-[300px] sm:min-h-[500px]">
             {(miniGroups.A || matches.length > 0) && (
-              <div className="mb-8 flex p-1 bg-white/80 backdrop-blur-sm rounded-xl border border-slate-200 shadow-sm w-fit overflow-x-auto">
-                {['groups', 'matches', 'standings', 'bracket'].map((tab) => (
-                    <button
-                        key={tab}
-                        onClick={() => setActiveTab(tab as any)}
-                        disabled={tab === 'bracket' && phase < 4}
-                        className={`px-4 py-2 rounded-lg font-bold text-sm whitespace-nowrap transition-all ${
-                            activeTab === tab ? "bg-indigo-600 text-white" : "text-slate-500 hover:text-slate-700 disabled:opacity-40"
-                        }`}
-                    >
-                        {t(tab)}
-                    </button>
-                ))}
+              <div className="mb-4 sm:mb-8 flex p-1 bg-white/80 backdrop-blur-sm rounded-xl border border-slate-200 shadow-sm w-full overflow-x-auto">
+                <div className="flex w-full">
+                  {['groups', 'matches', 'standings', 'bracket'].map((tab) => (
+                      <button
+                          key={tab}
+                          onClick={() => setActiveTab(tab as any)}
+                          disabled={tab === 'bracket' && phase < 4}
+                          className={`flex-1 px-2 sm:px-4 py-2 rounded-lg font-bold text-xs sm:text-sm whitespace-nowrap transition-all ${
+                              activeTab === tab ? "bg-indigo-600 text-white" : "text-slate-500 hover:text-slate-700 disabled:opacity-40"
+                          }`}
+                      >
+                          {t(tab)}
+                      </button>
+                  ))}
+                </div>
               </div>
             )}
 
@@ -685,7 +687,7 @@ const AppContent = () => {
                 />
               )}
               {activeTab === "standings" && phase !== 4 && (
-                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
+                <div className="space-y-4 sm:space-y-6 animate-in fade-in slide-in-from-bottom-4">
                    {Object.entries(standings).map(([name, stats]) => (
                     <StandingsTable key={name} groupName={name} stats={stats} />
                   ))}

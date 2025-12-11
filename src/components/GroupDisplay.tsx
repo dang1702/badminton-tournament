@@ -172,15 +172,15 @@ export const GroupDisplay: React.FC<GroupDisplayProps> = ({
   // Make sure drag and drop is only enabled when isEditable is true and onUpdateGroups is provided
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-indigo-100 rounded-xl shadow-sm">
-            <Layers className="w-6 h-6 text-indigo-600" />
+    <div className="space-y-6 sm:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 gap-4">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="p-2 sm:p-2.5 bg-indigo-100 rounded-xl shadow-sm">
+            <Layers className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-slate-900">{t('qualifyingGroups')}</h2>
-            <p className="text-sm text-slate-500 font-medium">{t('groupStageDist')}</p>
+            <h2 className="text-lg sm:text-xl font-bold text-slate-900">{t('qualifyingGroups')}</h2>
+            <p className="text-xs sm:text-sm text-slate-500 font-medium">{t('groupStageDist')}</p>
           </div>
         </div>
         
@@ -188,10 +188,10 @@ export const GroupDisplay: React.FC<GroupDisplayProps> = ({
         {isEditable && !isEditing && (
           <button 
             onClick={() => setIsEditing(true)}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors border border-indigo-200"
+            className="flex items-center gap-2 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors border border-indigo-200 self-start sm:self-auto"
           >
-            <Edit2 className="w-4 h-4" />
-            Edit Groups
+            <Edit2 className="w-3 h-3 sm:w-4 sm:h-4" />
+            <span className="whitespace-nowrap">Edit Groups</span>
           </button>
         )}
 
@@ -199,17 +199,17 @@ export const GroupDisplay: React.FC<GroupDisplayProps> = ({
           <div className="flex items-center gap-2">
             <button 
               onClick={handleCancel}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 bg-white hover:bg-slate-50 rounded-lg transition-colors border border-slate-200"
+              className="flex items-center gap-2 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-slate-600 bg-white hover:bg-slate-50 rounded-lg transition-colors border border-slate-200"
             >
-              <X className="w-4 h-4" />
-              Cancel
+              <X className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span>Cancel</span>
             </button>
             <button 
               onClick={handleSave}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-500 rounded-lg transition-colors shadow-sm"
+              className="flex items-center gap-2 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-500 rounded-lg transition-colors shadow-sm"
             >
-              <Check className="w-4 h-4" />
-              Save
+              <Check className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span>Save</span>
             </button>
           </div>
         )}
@@ -221,18 +221,18 @@ export const GroupDisplay: React.FC<GroupDisplayProps> = ({
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="grid md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
           {Object.keys(localGroups).map((zone) => (
             <div key={zone} className="relative">
               {/* Zone Header */}
-              <div className="flex items-center gap-2 mb-4 sticky top-20 z-10 bg-slate-50/95 backdrop-blur py-2">
-                <span className="w-2 h-8 bg-indigo-500 rounded-full" />
-                <h3 className="text-lg font-bold text-slate-800 uppercase tracking-wider">
+              <div className="flex items-center gap-2 mb-4 sticky top-16 sm:top-20 z-10 bg-slate-50/95 backdrop-blur py-2">
+                <span className="w-2 h-6 sm:h-8 bg-indigo-500 rounded-full" />
+                <h3 className="text-base sm:text-lg font-bold text-slate-800 uppercase tracking-wider">
                   {t('zone')} {zone}
                 </h3>
               </div>
               
-              <div className="space-y-5">
+              <div className="space-y-4 sm:space-y-5">
                 {localGroups[zone].map((group, i) => (
                   <div 
                     key={i} 
@@ -242,12 +242,12 @@ export const GroupDisplay: React.FC<GroupDisplayProps> = ({
                     `}
                   >
                     {/* Group Header */}
-                    <div className="bg-gradient-to-r from-slate-50 to-white px-5 py-3 border-b border-slate-100 flex justify-between items-center group-hover:from-indigo-50/50 group-hover:to-white transition-colors">
+                    <div className="bg-gradient-to-r from-slate-50 to-white px-4 sm:px-5 py-3 border-b border-slate-100 flex justify-between items-center group-hover:from-indigo-50/50 group-hover:to-white transition-colors">
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md text-sm border border-indigo-100">
+                        <span className="font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md text-xs sm:text-sm border border-indigo-100">
                           {zone}{i + 1}
                         </span>
-                        <span className="text-sm font-semibold text-slate-700">{t('groupStage')}</span>
+                        <span className="text-xs sm:text-sm font-semibold text-slate-700">{t('groupStage')}</span>
                       </div>
                       <div className="flex items-center gap-1.5 text-xs font-medium text-slate-400 bg-white px-2 py-1 rounded-full border border-slate-200">
                         <Users className="w-3 h-3" />
@@ -256,7 +256,7 @@ export const GroupDisplay: React.FC<GroupDisplayProps> = ({
                     </div>
                     
                     {/* Team List */}
-                    <div className="p-4 space-y-2">
+                    <div className="p-3 sm:p-4 space-y-2">
                       {isEditing ? (
                         <SortableContext 
                           items={group.map(t => t.id)} 
@@ -276,11 +276,11 @@ export const GroupDisplay: React.FC<GroupDisplayProps> = ({
                               <span className="text-xs font-bold text-slate-300 w-4 text-center">
                                 {idx + 1}
                               </span>
-                              <span className="font-medium text-slate-700 text-sm">
+                              <span className="font-medium text-slate-700 text-xs sm:text-sm truncate">
                                 {team.name}
                               </span>
                             </div>
-                            <ChevronRight className="w-4 h-4 text-slate-200 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 text-slate-200 opacity-0 group-hover:opacity-100 transition-opacity" />
                           </div>
                         ))
                       )}
@@ -293,7 +293,7 @@ export const GroupDisplay: React.FC<GroupDisplayProps> = ({
         </div>
         <DragOverlay>
             {activeId ? (
-                <div className="p-3 bg-white border border-indigo-500 rounded-lg shadow-xl opacity-90 cursor-grabbing">
+                <div className="p-2 sm:p-3 bg-white border border-indigo-500 rounded-lg shadow-xl opacity-90 cursor-grabbing text-xs sm:text-sm">
                    Dragging Item...
                 </div>
             ) : null}

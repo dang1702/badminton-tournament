@@ -11,7 +11,7 @@ interface Translations {
 
 const translations: Translations = {
   // Header
-  appTitle: { en: 'Badminton Pro', vi: 'Badminton Pro' },
+  appTitle: { en: 'QHBadminton', vi: 'QHBadminton' },
   appSubtitle: { en: 'Tournament Manager', vi: 'Quản Lý Giải Đấu' },
   
   // Team Manager
